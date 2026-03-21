@@ -156,8 +156,56 @@
   <div id="app"></div>
   <script src="questions.js"></script>
   <script>
-    // JS goes here in Task 3+
-    console.log('QUESTIONS loaded:', Object.keys(QUESTIONS))
+    // ── State ────────────────────────────────────────────────
+    let playerNames       = { p1: '', p2: '' }
+    let questionsPerLevel = 5
+    let currentLevel      = 1
+    let currentDeck       = []   // { text, type: 'question'|'dealbreaker' }
+    let currentIndex      = 0
+    let remainingPool     = []
+    let p1GoesFirst       = true
+
+    // ── Computed max questions per level ─────────────────────
+    const levels = [QUESTIONS.level1, QUESTIONS.level2, QUESTIONS.level3]
+    const computedMax = Math.min(...levels.map(l => l.questions.length))
+
+    // ── Screen router ─────────────────────────────────────────
+    // Possible values: 'resume' | 'setup' | 'game' | 'levelcomplete' | 'gamecomplete'
+    let screen = 'setup'
+
+    function render() {
+      const app = document.getElementById('app')
+      if (screen === 'resume')        { app.innerHTML = renderResume();       bindResume()       }
+      else if (screen === 'setup')    { app.innerHTML = renderSetup();        bindSetup()        }
+      else if (screen === 'game')     { app.innerHTML = renderGame();         bindGame()         }
+      else if (screen === 'levelcomplete') { app.innerHTML = renderLevelComplete(); bindLevelComplete() }
+      else if (screen === 'gamecomplete')  { app.innerHTML = renderGameComplete();  bindGameComplete()  }
+    }
+
+    // ── Boot ──────────────────────────────────────────────────
+    function boot() {
+      const saved = localStorage.getItem('wnrs_save')
+      if (saved) {
+        screen = 'resume'
+      } else {
+        screen = 'setup'
+      }
+      render()
+    }
+
+    // Stub render functions — replaced in later tasks
+    function renderResume()        { return '<div class="screen"><p>Resume</p></div>' }
+    function renderSetup()         { return '<div class="screen"><p>Setup</p></div>' }
+    function renderGame()          { return '<div class="screen"><p>Game</p></div>' }
+    function renderLevelComplete() { return '<div class="screen"><p>Level Complete</p></div>' }
+    function renderGameComplete()  { return '<div class="screen"><p>Game Complete</p></div>' }
+    function bindResume()        {}
+    function bindSetup()         {}
+    function bindGame()          {}
+    function bindLevelComplete() {}
+    function bindGameComplete()  {}
+
+    boot()
   </script>
 </body>
 </html>
