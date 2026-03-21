@@ -262,6 +262,50 @@
     function bindLevelComplete() {}
     function bindGameComplete()  {}
 
+    // Fisher-Yates shuffle (mutates array, returns it)
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      }
+      return arr
+    }
+
+    function buildDeck(levelKey) {
+      const level = QUESTIONS[levelKey]
+      const shuffledQuestions = shuffle([...level.questions])
+      const hasDealer = level.dealBreakers.length > 0
+
+      let selected, db
+
+      if (hasDealer) {
+        // N-1 regular questions + 1 deal breaker = N total
+        selected = shuffledQuestions.slice(0, questionsPerLevel - 1)
+        remainingPool = shuffledQuestions.slice(questionsPerLevel - 1)
+        const randomDb = level.dealBreakers[Math.floor(Math.random() * level.dealBreakers.length)]
+        db = { text: randomDb, type: 'dealbreaker' }
+      } else {
+        // No deal breakers available — use N regular questions
+        selected = shuffledQuestions.slice(0, questionsPerLevel)
+        remainingPool = shuffledQuestions.slice(questionsPerLevel)
+        db = null
+      }
+
+      const deck = selected.map(text => ({ text, type: 'question' }))
+      if (db) deck.push(db)
+      shuffle(deck) // randomise deal breaker position
+      return deck
+    }
+
+    function startLevel(level) {
+      currentLevel = level
+      currentIndex = 0
+      const key = `level${level}`
+      currentDeck = buildDeck(key)
+      screen = 'game'
+      render()
+    }
+
     boot()
   </script>
 </body>
