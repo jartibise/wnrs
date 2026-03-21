@@ -195,12 +195,69 @@
 
     // Stub render functions — replaced in later tasks
     function renderResume()        { return '<div class="screen"><p>Resume</p></div>' }
-    function renderSetup()         { return '<div class="screen"><p>Setup</p></div>' }
+    function renderSetup() {
+      const clampedDefault = Math.min(5, computedMax)
+      return `
+        <div class="screen">
+          <div style="text-align:center">
+            <div class="setup-title-sub">We're Not Really Strangers</div>
+            <div class="setup-title-main">New Game</div>
+          </div>
+          <div class="setup-form">
+            <div>
+              <label class="field-label" for="p1">Player 1</label>
+              <input class="field-input" id="p1" type="text" placeholder="Enter name..." autocomplete="off" maxlength="20">
+            </div>
+            <div>
+              <label class="field-label" for="p2">Player 2</label>
+              <input class="field-input" id="p2" type="text" placeholder="Enter name..." autocomplete="off" maxlength="20">
+            </div>
+            <div>
+              <label class="field-label">Questions per level</label>
+              <div class="qty-row">
+                <input class="qty-input" id="qty" type="number" value="${clampedDefault}" min="3" max="${computedMax}" readonly>
+                <div class="qty-btns">
+                  <button class="qty-btn" id="qty-up">▲</button>
+                  <button class="qty-btn" id="qty-down">▼</button>
+                </div>
+              </div>
+              <div class="field-hint">1 Deal Breaker included per level · max ${computedMax}</div>
+            </div>
+            <button class="btn-primary" id="start-btn">Start Game</button>
+            <div id="setup-error" style="color:var(--accent);font-size:13px;text-align:center;min-height:18px"></div>
+          </div>
+        </div>
+      `
+    }
     function renderGame()          { return '<div class="screen"><p>Game</p></div>' }
     function renderLevelComplete() { return '<div class="screen"><p>Level Complete</p></div>' }
     function renderGameComplete()  { return '<div class="screen"><p>Game Complete</p></div>' }
     function bindResume()        {}
-    function bindSetup()         {}
+    function bindSetup() {
+      // ▲/▼ buttons
+      let qty = Math.min(5, computedMax)
+      const qtyEl = document.getElementById('qty')
+      document.getElementById('qty-up').addEventListener('click', () => {
+        if (qty < computedMax) { qty++; qtyEl.value = qty }
+      })
+      document.getElementById('qty-down').addEventListener('click', () => {
+        if (qty > 3) { qty--; qtyEl.value = qty }
+      })
+
+      document.getElementById('start-btn').addEventListener('click', () => {
+        const p1 = document.getElementById('p1').value.trim()
+        const p2 = document.getElementById('p2').value.trim()
+        const err = document.getElementById('setup-error')
+        if (!p1 || !p2) { err.textContent = 'Both names are required.'; return }
+        err.textContent = ''
+        playerNames = { p1, p2 }
+        questionsPerLevel = qty
+        p1GoesFirst = true
+        currentLevel = 1
+        localStorage.removeItem('wnrs_save')
+        startLevel(1)
+      })
+    }
     function bindGame()          {}
     function bindLevelComplete() {}
     function bindGameComplete()  {}
