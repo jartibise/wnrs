@@ -182,14 +182,43 @@
       else if (screen === 'gamecomplete')  { app.innerHTML = renderGameComplete();  bindGameComplete()  }
     }
 
+    // ── Global Listeners (setup once at boot) ─────────────────
+    function setupGlobalListeners() {
+      let touchStartX = 0, touchStartY = 0, touchHasMoved = false
+
+      document.addEventListener('touchstart', e => {
+        touchStartX = e.touches[0].clientX
+        touchStartY = e.touches[0].clientY
+        touchHasMoved = false
+      }, { passive: true })
+
+      document.addEventListener('touchmove', () => { touchHasMoved = true }, { passive: true })
+
+      document.addEventListener('touchend', e => {
+        if (screen !== 'game') return
+        const dx = e.changedTouches[0].clientX - touchStartX
+        const dy = e.changedTouches[0].clientY - touchStartY
+        const absDx = Math.abs(dx), absDy = Math.abs(dy)
+        if (absDx >= 40 && absDx > absDy) {
+          navigate(dx < 0 ? 'next' : 'prev')
+        } else if (!touchHasMoved && absDx < 10 && absDy < 10) {
+          if (e.target.closest('button')) return
+          navigate(e.changedTouches[0].clientX < window.innerWidth / 2 ? 'prev' : 'next')
+        }
+      })
+
+      document.addEventListener('keydown', e => {
+        if (screen !== 'game') return
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  navigate('next')
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    navigate('prev')
+      })
+    }
+
     // ── Boot ──────────────────────────────────────────────────
     function boot() {
+      setupGlobalListeners()
       const saved = localStorage.getItem('wnrs_save')
-      if (saved) {
-        screen = 'resume'
-      } else {
-        screen = 'setup'
-      }
+      screen = saved ? 'resume' : 'setup'
       render()
     }
 
