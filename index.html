@@ -169,6 +169,11 @@
     const levels = [QUESTIONS.level1, QUESTIONS.level2, QUESTIONS.level3]
     const computedMax = Math.min(...levels.map(l => l.questions.length))
 
+    // ── XSS Prevention: Escape HTML special characters ──────────
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+    }
+
     // ── Screen router ─────────────────────────────────────────
     // Possible values: 'resume' | 'setup' | 'game' | 'levelcomplete' | 'gamecomplete'
     let screen = 'setup'
@@ -265,7 +270,7 @@
     }
 
     function directionLabel(dir) {
-      return `for ${playerNames[dir]}`
+      return `for ${escapeHtml(playerNames[dir])}`
     }
 
     function renderGame() {
@@ -306,7 +311,7 @@
           <div class="end-label">Level ${currentLevel} Complete</div>
           <div class="end-title">${level.name}</div>
           <div class="end-divider"></div>
-          <div class="end-message">Ready to go deeper,<br>${playerNames.p1} &amp; ${playerNames.p2}?</div>
+          <div class="end-message">Ready to go deeper,<br>${escapeHtml(playerNames.p1)} &amp; ${escapeHtml(playerNames.p2)}?</div>
           <button class="btn-end" id="next-level-btn">
             Level ${nextLevel}: ${nextLevelData.name} →
           </button>
