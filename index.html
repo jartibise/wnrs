@@ -229,7 +229,45 @@
         </div>
       `
     }
-    function renderGame()          { return '<div class="screen"><p>Game</p></div>' }
+    // Returns 'p1' or 'p2' — deal breakers follow the same alternation as regular cards
+    function cardDirection(index) {
+      const isEven = index % 2 === 0
+      return (isEven === p1GoesFirst) ? 'p1' : 'p2'
+    }
+
+    function directionLabel(dir) {
+      return `for ${playerNames[dir]}`
+    }
+
+    function renderGame() {
+      const card = currentDeck[currentIndex]
+      const total = currentDeck.length
+      const dir = cardDirection(currentIndex)
+      const isDealBreaker = card.type === 'dealbreaker'
+      const levelData = QUESTIONS[`level${currentLevel}`]
+      const levelLabel = `LEVEL ${currentLevel} · ${levelData.name.toUpperCase()}`
+      const canReroll = !isDealBreaker && remainingPool.length > 0
+      const isFirst = currentIndex === 0
+
+      return `
+        <div class="game-screen">
+          <div class="game-top">
+            <div class="level-label">${levelLabel}</div>
+            ${isDealBreaker ? '<div class="deal-badge">Deal Breaker</div>' : ''}
+            <div class="for-label">${directionLabel(dir)}</div>
+          </div>
+          <div class="game-middle">
+            <button class="nav-btn" id="prev-btn" ${isFirst ? 'disabled' : ''}>‹</button>
+            <div class="question-text">${card.text}</div>
+            <button class="nav-btn" id="next-btn">›</button>
+          </div>
+          <div class="game-bottom">
+            ${canReroll ? '<button class="reroll-btn" id="reroll-btn">↺ Re-roll</button>' : '<div style="height:35px"></div>'}
+            <div class="progress">${currentIndex + 1} / ${total}</div>
+          </div>
+        </div>
+      `
+    }
     function renderLevelComplete() { return '<div class="screen"><p>Level Complete</p></div>' }
     function renderGameComplete()  { return '<div class="screen"><p>Game Complete</p></div>' }
     function bindResume()        {}
@@ -258,7 +296,54 @@
         startLevel(1)
       })
     }
-    function bindGame()          {}
+    function navigate(dir) {
+      if (dir === 'prev') {
+        if (currentIndex > 0) {
+          currentIndex--
+          saveState()
+          render()
+        }
+      } else {
+        if (currentIndex < currentDeck.length - 1) {
+          currentIndex++
+          saveState()
+          render()
+        } else {
+          // Last card — transition
+          if (currentLevel < 3) {
+            // Flip p1GoesFirst based on parity
+            if (currentDeck.length % 2 !== 0) p1GoesFirst = !p1GoesFirst
+            screen = 'levelcomplete'
+            saveState()
+            render()
+          } else {
+            // Level 3 complete → game complete
+            screen = 'gamecomplete'
+            localStorage.removeItem('wnrs_save')
+            render()
+          }
+        }
+      }
+    }
+
+    function reroll() {
+      if (remainingPool.length === 0) return
+      const idx = Math.floor(Math.random() * remainingPool.length)
+      currentDeck[currentIndex] = { text: remainingPool[idx], type: 'question' }
+      remainingPool.splice(idx, 1)
+      saveState()
+      render()
+    }
+
+    // Stub — replaced in Task 10
+    function saveState() {}
+
+    function bindGame() {
+      document.getElementById('prev-btn').addEventListener('click', () => navigate('prev'))
+      document.getElementById('next-btn').addEventListener('click', () => navigate('next'))
+      const rerollBtn = document.getElementById('reroll-btn')
+      if (rerollBtn) rerollBtn.addEventListener('click', reroll)
+    }
     function bindLevelComplete() {}
     function bindGameComplete()  {}
 
