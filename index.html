@@ -297,7 +297,22 @@
         </div>
       `
     }
-    function renderLevelComplete() { return '<div class="screen"><p>Level Complete</p></div>' }
+    function renderLevelComplete() {
+      const level = QUESTIONS[`level${currentLevel}`]
+      const nextLevel = currentLevel + 1
+      const nextLevelData = QUESTIONS[`level${nextLevel}`]
+      return `
+        <div class="end-screen">
+          <div class="end-label">Level ${currentLevel} Complete</div>
+          <div class="end-title">${level.name}</div>
+          <div class="end-divider"></div>
+          <div class="end-message">Ready to go deeper,<br>${playerNames.p1} &amp; ${playerNames.p2}?</div>
+          <button class="btn-end" id="next-level-btn">
+            Level ${nextLevel}: ${nextLevelData.name} →
+          </button>
+        </div>
+      `
+    }
     function renderGameComplete()  { return '<div class="screen"><p>Game Complete</p></div>' }
     function bindResume()        {}
     function bindSetup() {
@@ -373,7 +388,11 @@
       const rerollBtn = document.getElementById('reroll-btn')
       if (rerollBtn) rerollBtn.addEventListener('click', reroll)
     }
-    function bindLevelComplete() {}
+    function bindLevelComplete() {
+      document.getElementById('next-level-btn').addEventListener('click', () => {
+        startLevel(currentLevel + 1)
+      })
+    }
     function bindGameComplete()  {}
 
     // Fisher-Yates shuffle (mutates array, returns it)
