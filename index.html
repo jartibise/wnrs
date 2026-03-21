@@ -7,7 +7,149 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>We're Not Really Strangers</title>
   <style>
-    /* CSS goes here in Task 2 */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #fff5f5;
+      --accent:      #e63946;
+      --accent-dark: #c1121f;
+      --border:      #ffd6d6;
+      --text:        #1a1a1a;
+      --text-muted:  #bbb;
+      --white:       #ffffff;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    #app {
+      height: 100dvh;
+      height: 100vh; /* fallback */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding:
+        max(24px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+    }
+
+    /* ---- Shared ---- */
+    .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+    /* ---- Setup Screen ---- */
+    .setup-title-sub { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
+    .setup-title-main { font-size: 28px; font-weight: 700; color: var(--text); }
+    .setup-form { width: 100%; display: flex; flex-direction: column; gap: 16px; }
+    .field-label { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .field-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; background: var(--white); color: var(--text);
+      font-size: 16px; font-family: inherit; outline: none;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .field-input::placeholder { color: var(--text-muted); }
+    .qty-row { display: flex; gap: 8px; align-items: stretch; }
+    .qty-input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 12px 14px; background: var(--white); color: var(--text);
+      font-size: 16px; font-family: inherit; text-align: center; outline: none;
+    }
+    .qty-input:focus { border-color: var(--accent); }
+    .qty-btns { display: flex; flex-direction: column; gap: 4px; }
+    .qty-btn {
+      border: 1.5px solid var(--border); border-radius: 6px; padding: 4px 12px;
+      background: var(--white); color: var(--text); font-size: 14px; cursor: pointer; line-height: 1;
+    }
+    .qty-btn:active { background: var(--border); }
+    .field-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .btn-primary {
+      width: 100%; background: var(--accent); color: var(--white);
+      border: none; border-radius: 12px; padding: 16px;
+      font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      cursor: pointer;
+    }
+    .btn-primary:active { background: var(--accent-dark); }
+    .btn-outline {
+      width: 100%; background: none; color: var(--accent);
+      border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-outline:active { background: var(--border); }
+
+    /* ---- Resume Screen ---- */
+    .resume-heading { font-size: 24px; font-weight: 700; color: var(--text); }
+    .resume-sub { font-size: 15px; color: var(--text-muted); text-align: center; }
+
+    /* ---- Game Screen ---- */
+    .game-screen {
+      width: 100%; height: 100dvh; height: 100vh;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding:
+        max(20px, env(safe-area-inset-top))
+        0
+        max(20px, env(safe-area-inset-bottom));
+    }
+    .game-top { text-align: center; padding: 0 16px; }
+    .level-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    .for-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .deal-badge {
+      display: inline-block; background: var(--accent); color: var(--white);
+      font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px; margin-top: 6px;
+    }
+    .game-middle {
+      flex: 1; display: flex; align-items: center; gap: 0;
+      padding: 16px 0;
+    }
+    .nav-btn {
+      width: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: var(--border); background: none; border: none; cursor: pointer;
+      height: 100%; padding: 0;
+    }
+    .nav-btn:disabled { opacity: 0.3; }
+    .nav-btn:not(:disabled):active { color: var(--accent); }
+    .question-text {
+      flex: 1; font-size: clamp(1.15rem, 4.5vw, 1.5rem);
+      line-height: 1.6; color: var(--text); text-align: center; max-width: 28ch;
+    }
+    .game-bottom { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 16px; }
+    .reroll-btn {
+      background: none; border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: 1px;
+      padding: 8px 20px; cursor: pointer;
+    }
+    .reroll-btn:active { background: var(--border); }
+    .progress { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+
+    /* ---- Level Complete / Game Complete ---- */
+    .end-screen {
+      width: 100%; height: 100dvh; height: 100vh;
+      background: var(--accent); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      padding: max(32px, env(safe-area-inset-top)) 24px max(32px, env(safe-area-inset-bottom));
+      text-align: center;
+    }
+    .end-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+    .end-title { font-size: 36px; font-weight: 700; color: var(--white); line-height: 1.2; }
+    .end-divider { width: 40px; height: 2px; background: rgba(255,255,255,0.3); border-radius: 2px; }
+    .end-message { font-size: 17px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+    .btn-end {
+      background: var(--white); color: var(--accent);
+      border: none; border-radius: 12px; padding: 16px 36px;
+      font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; margin-top: 8px;
+    }
+    .btn-end:active { opacity: 0.85; }
   </style>
 </head>
 <body>
