@@ -318,7 +318,17 @@
         </div>
       `
     }
-    function renderGameComplete()  { return '<div class="screen"><p>Game Complete</p></div>' }
+    function renderGameComplete() {
+      return `
+        <div class="end-screen">
+          <div class="end-label">Game Complete</div>
+          <div class="end-title">That's a wrap.</div>
+          <div class="end-divider"></div>
+          <div class="end-message">${escapeHtml(playerNames.p1)} &amp; ${escapeHtml(playerNames.p2)}<br>thanks for playing.</div>
+          <button class="btn-end" id="play-again-btn">Play Again</button>
+        </div>
+      `
+    }
     function bindResume()        {}
     function bindSetup() {
       // ▲/▼ buttons
@@ -398,7 +408,20 @@
         startLevel(currentLevel + 1)
       })
     }
-    function bindGameComplete()  {}
+    function bindGameComplete() {
+      document.getElementById('play-again-btn').addEventListener('click', () => {
+        localStorage.removeItem('wnrs_save')
+        playerNames = { p1: '', p2: '' }
+        questionsPerLevel = Math.min(5, computedMax)
+        currentLevel = 1
+        currentDeck = []
+        currentIndex = 0
+        remainingPool = []
+        p1GoesFirst = true
+        screen = 'setup'
+        render()
+      })
+    }
 
     // Fisher-Yates shuffle (mutates array, returns it)
     function shuffle(arr) {
