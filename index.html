@@ -227,8 +227,18 @@
       render()
     }
 
-    // Stub render functions — replaced in later tasks
-    function renderResume()        { return '<div class="screen"><p>Resume</p></div>' }
+    function renderResume() {
+      return `
+        <div class="screen">
+          <div class="resume-heading">Welcome back.</div>
+          <div class="resume-sub">You have a game in progress.</div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:12px;margin-top:8px">
+            <button class="btn-primary" id="continue-btn">Continue</button>
+            <button class="btn-outline" id="startover-btn">Start Over</button>
+          </div>
+        </div>
+      `
+    }
     function renderSetup() {
       const clampedDefault = Math.min(5, computedMax)
       return `
@@ -329,7 +339,21 @@
         </div>
       `
     }
-    function bindResume()        {}
+    function bindResume() {
+      document.getElementById('continue-btn').addEventListener('click', () => {
+        if (loadState()) {
+          render()
+        } else {
+          screen = 'setup'
+          render()
+        }
+      })
+      document.getElementById('startover-btn').addEventListener('click', () => {
+        localStorage.removeItem('wnrs_save')
+        screen = 'setup'
+        render()
+      })
+    }
     function bindSetup() {
       // ▲/▼ buttons
       let qty = Math.min(5, computedMax)
@@ -394,8 +418,34 @@
       render()
     }
 
-    // Stub — replaced in Task 10
-    function saveState() {}
+    function saveState() {
+      const state = {
+        playerNames, questionsPerLevel,
+        currentLevel, currentDeck, currentIndex,
+        remainingPool, p1GoesFirst, screen
+      }
+      localStorage.setItem('wnrs_save', JSON.stringify(state))
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem('wnrs_save')
+      if (!raw) return false
+      try {
+        const s = JSON.parse(raw)
+        playerNames       = s.playerNames
+        questionsPerLevel = s.questionsPerLevel
+        currentLevel      = s.currentLevel
+        currentDeck       = s.currentDeck
+        currentIndex      = s.currentIndex
+        remainingPool     = s.remainingPool
+        p1GoesFirst       = s.p1GoesFirst
+        screen            = s.screen
+        return true
+      } catch {
+        localStorage.removeItem('wnrs_save')
+        return false
+      }
+    }
 
     function bindGame() {
       document.getElementById('prev-btn').addEventListener('click', () => navigate('prev'))
