@@ -90,6 +90,13 @@
     .resume-heading { font-size: 24px; font-weight: 700; color: var(--text); }
     .resume-sub { font-size: 15px; color: var(--text-muted); text-align: center; }
 
+    /* ---- Instructions Screen ---- */
+    .instructions-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    .instructions-body { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .instruction-rule { font-size: 14px; line-height: 1.6; color: var(--text); }
+    .instruction-rule strong { font-weight: 700; }
+    .instruction-divider { width: 100%; height: 1px; background: var(--border); }
+
     /* ---- Game Screen ---- */
     .game-screen {
       width: 100%; height: 100dvh; height: 100vh;
@@ -102,8 +109,8 @@
     .game-top { text-align: center; padding: 0 16px; }
     .level-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
     .for-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-    .deal-badge {
-      display: inline-block; background: var(--accent); color: var(--white);
+    .wildcard-badge {
+      display: inline-block; border: 1.5px solid var(--accent); color: var(--accent);
       font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
       padding: 3px 10px; border-radius: 20px; margin-top: 6px;
     }
@@ -118,10 +125,21 @@
     }
     .nav-btn:disabled { opacity: 0.3; }
     .nav-btn:not(:disabled):active { color: var(--accent); }
+    .card-content { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; }
     .question-text {
-      flex: 1; font-size: clamp(1.15rem, 4.5vw, 1.5rem);
+      font-size: clamp(1.15rem, 4.5vw, 1.5rem);
       line-height: 1.6; color: var(--text); text-align: center; max-width: 28ch;
     }
+    .question-text.reminder { font-style: italic; color: var(--text-muted); font-size: clamp(1rem, 4vw, 1.3rem); }
+    .timer-block { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .timer-display { font-size: 36px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+    .timer-done { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+    .timer-start-btn {
+      background: var(--accent); color: var(--white); border: none; border-radius: 10px;
+      padding: 10px 28px; font-size: 13px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .timer-start-btn:active { background: var(--accent-dark); }
     .game-bottom { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 16px; }
     .reroll-btn {
       background: none; border: 1.5px solid var(--border); border-radius: 8px;
@@ -130,8 +148,29 @@
     }
     .reroll-btn:active { background: var(--border); }
     .progress { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+    .dig-deeper-row { display: flex; gap: 8px; width: 100%; }
+    .dig-btn {
+      flex: 1; background: none; border: 1.5px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+      padding: 8px 6px; cursor: pointer; line-height: 1.3; text-align: center;
+    }
+    .dig-btn:not(:disabled):active { background: var(--border); }
+    .dig-btn:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--text-muted); }
 
-    /* ---- Level Complete / Game Complete ---- */
+    /* ---- Dig Deeper Banner ---- */
+    .dig-banner {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--white);
+      font-size: 13px; font-weight: 600; text-align: center;
+      padding: 12px 20px; border-radius: 12px;
+      max-width: calc(100% - 48px); width: max-content;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 100;
+    }
+    .dig-banner.visible { opacity: 1; pointer-events: auto; }
+
+    /* ---- Level Complete / Game Complete / Final Card ---- */
     .end-screen {
       width: 100%; height: 100dvh; height: 100vh;
       background: var(--accent); display: flex; flex-direction: column;
@@ -143,6 +182,7 @@
     .end-title { font-size: 36px; font-weight: 700; color: var(--white); line-height: 1.2; }
     .end-divider { width: 40px; height: 2px; background: rgba(255,255,255,0.3); border-radius: 2px; }
     .end-message { font-size: 17px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+    .final-instruction { font-size: 20px; font-weight: 600; color: var(--white); line-height: 1.7; max-width: 26ch; text-align: center; }
     .btn-end {
       background: var(--white); color: var(--accent);
       border: none; border-radius: 12px; padding: 16px 36px;
@@ -154,37 +194,47 @@
 </head>
 <body>
   <div id="app"></div>
+  <div class="dig-banner" id="dig-banner"></div>
   <script src="questions.js"></script>
   <script>
     // ── State ────────────────────────────────────────────────
     let playerNames       = { p1: '', p2: '' }
     let questionsPerLevel = 5
     let currentLevel      = 1
-    let currentDeck       = []   // { text, type: 'question'|'dealbreaker' }
+    let currentDeck       = []   // { text, type: 'reminder'|'question'|'wildcard', timed?, duration? }
     let currentIndex      = 0
-    let remainingPool     = []
+    let remainingPool     = []   // regular questions only
     let p1GoesFirst       = true
+    let digDeeper         = { p1: true, p2: true }
+
+    // ── Timer state (local only — not saved to localStorage) ──
+    let timerInterval  = null
+    let timerRemaining = 0
+    let timerRunning   = false
+    let timerDone      = false
 
     // ── Computed max questions per level ─────────────────────
     const levels = [QUESTIONS.level1, QUESTIONS.level2, QUESTIONS.level3]
     const computedMax = Math.min(...levels.map(l => l.questions.length))
 
-    // ── XSS Prevention: Escape HTML special characters ──────────
+    // ── XSS Prevention ───────────────────────────────────────
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
     }
 
     // ── Screen router ─────────────────────────────────────────
-    // Possible values: 'resume' | 'setup' | 'game' | 'levelcomplete' | 'gamecomplete'
+    // States: 'resume' | 'setup' | 'instructions' | 'game' | 'levelcomplete' | 'finalcard' | 'gamecomplete'
     let screen = 'setup'
 
     function render() {
       const app = document.getElementById('app')
-      if (screen === 'resume')        { app.innerHTML = renderResume();       bindResume()       }
-      else if (screen === 'setup')    { app.innerHTML = renderSetup();        bindSetup()        }
-      else if (screen === 'game')     { app.innerHTML = renderGame();         bindGame()         }
-      else if (screen === 'levelcomplete') { app.innerHTML = renderLevelComplete(); bindLevelComplete() }
-      else if (screen === 'gamecomplete')  { app.innerHTML = renderGameComplete();  bindGameComplete()  }
+      if      (screen === 'resume')       { app.innerHTML = renderResume();        bindResume()        }
+      else if (screen === 'setup')        { app.innerHTML = renderSetup();         bindSetup()         }
+      else if (screen === 'instructions') { app.innerHTML = renderInstructions();  bindInstructions()  }
+      else if (screen === 'game')         { app.innerHTML = renderGame();          bindGame()          }
+      else if (screen === 'levelcomplete'){ app.innerHTML = renderLevelComplete(); bindLevelComplete() }
+      else if (screen === 'finalcard')    { app.innerHTML = renderFinalCard();     bindFinalCard()     }
+      else if (screen === 'gamecomplete') { app.innerHTML = renderGameComplete();  bindGameComplete()  }
     }
 
     // ── Global Listeners (setup once at boot) ─────────────────
@@ -227,6 +277,7 @@
       render()
     }
 
+    // ── Render: Resume ────────────────────────────────────────
     function renderResume() {
       return `
         <div class="screen">
@@ -239,6 +290,8 @@
         </div>
       `
     }
+
+    // ── Render: Setup ─────────────────────────────────────────
     function renderSetup() {
       const clampedDefault = Math.min(5, computedMax)
       return `
@@ -259,13 +312,13 @@
             <div>
               <label class="field-label">Questions per level</label>
               <div class="qty-row">
-                <input class="qty-input" id="qty" type="number" value="${clampedDefault}" min="3" max="${computedMax}" readonly>
+                <input class="qty-input" id="qty" type="number" value="${clampedDefault}" min="5" max="${computedMax}" readonly>
                 <div class="qty-btns">
                   <button class="qty-btn" id="qty-up">▲</button>
                   <button class="qty-btn" id="qty-down">▼</button>
                 </div>
               </div>
-              <div class="field-hint">1 Deal Breaker included per level · max ${computedMax}</div>
+              <div class="field-hint">Wild cards included automatically · max ${computedMax}</div>
             </div>
             <button class="btn-primary" id="start-btn">Start Game</button>
             <div id="setup-error" style="color:var(--accent);font-size:13px;text-align:center;min-height:18px"></div>
@@ -273,61 +326,138 @@
         </div>
       `
     }
-    // Returns 'p1' or 'p2' — deal breakers follow the same alternation as regular cards
+
+    // ── Render: Instructions ──────────────────────────────────
+    function renderInstructions() {
+      return `
+        <div class="screen">
+          <div class="instructions-label">How to Play</div>
+          <div class="instructions-body">
+            <div class="instruction-rule"><strong>Stare into each other's eyes. First to blink draws first.</strong></div>
+            <div class="instruction-divider"></div>
+            <div class="instruction-rule">Player A draws a card. Player B answers. Alternate back and forth.</div>
+            <div class="instruction-divider"></div>
+            <div class="instruction-rule"><strong>Level 1 — Perception:</strong> Answer the first thing that comes to mind. If your partner guesses wrong, reveal the actual answer.</div>
+            <div class="instruction-divider"></div>
+            <div class="instruction-rule"><strong>Wild Cards:</strong> Your partner must complete the instructions (unless the card says otherwise).</div>
+            <div class="instruction-divider"></div>
+            <div class="instruction-rule"><strong>Dig Deeper:</strong> Each player gets one per level. Use it when you feel your partner is holding back.</div>
+            <div class="instruction-divider"></div>
+            <div class="instruction-rule">The <strong>Final Card</strong> waits at the end. You'll know what to do.</div>
+          </div>
+          <button class="btn-primary" id="lets-play-btn">Let's Play →</button>
+        </div>
+      `
+    }
+
+    // ── Render: Game ──────────────────────────────────────────
     function cardDirection(index) {
       const isEven = index % 2 === 0
       return (isEven === p1GoesFirst) ? 'p1' : 'p2'
     }
 
-    function directionLabel(dir) {
-      return `for ${escapeHtml(playerNames[dir])}`
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60)
+      const s = seconds % 60
+      return `${m}:${String(s).padStart(2, '0')}`
     }
 
     function renderGame() {
       const card = currentDeck[currentIndex]
       const total = currentDeck.length
       const dir = cardDirection(currentIndex)
-      const isDealBreaker = card.type === 'dealbreaker'
+      const isReminder = card.type === 'reminder'
+      const isWildcard = card.type === 'wildcard'
+      const isQuestion = card.type === 'question'
       const levelData = QUESTIONS[`level${currentLevel}`]
       const levelLabel = `LEVEL ${currentLevel} · ${levelData.name.toUpperCase()}`
-      const canReroll = !isDealBreaker && remainingPool.length > 0
+      const canReroll = isQuestion && remainingPool.length > 0
       const isFirst = currentIndex === 0
+
+      // Timer block (only for timed wildcards)
+      let timerBlock = ''
+      if (isWildcard && card.timed) {
+        if (timerDone) {
+          timerBlock = `<div class="timer-block"><div class="timer-done">Time's up!</div></div>`
+        } else if (timerRunning) {
+          timerBlock = `<div class="timer-block"><div class="timer-display">${formatTime(timerRemaining)}</div></div>`
+        } else {
+          timerBlock = `<div class="timer-block"><div class="timer-display">${formatTime(card.duration)}</div><button class="timer-start-btn" id="timer-start-btn">Start</button></div>`
+        }
+      }
+
+      // Dig Deeper buttons (hidden on reminder cards)
+      const p1Used = !digDeeper.p1
+      const p2Used = !digDeeper.p2
+      const digRow = isReminder ? '' : `
+        <div class="dig-deeper-row">
+          <button class="dig-btn" id="dig-p1-btn" ${p1Used ? 'disabled' : ''}>
+            ${escapeHtml(playerNames.p1)}<br>Dig Deeper
+          </button>
+          <button class="dig-btn" id="dig-p2-btn" ${p2Used ? 'disabled' : ''}>
+            ${escapeHtml(playerNames.p2)}<br>Dig Deeper
+          </button>
+        </div>
+      `
 
       return `
         <div class="game-screen">
           <div class="game-top">
             <div class="level-label">${levelLabel}</div>
-            ${isDealBreaker ? '<div class="deal-badge">Deal Breaker</div>' : ''}
-            <div class="for-label">${directionLabel(dir)}</div>
+            ${isWildcard ? '<div class="wildcard-badge">Wild Card</div>' : ''}
+            ${!isReminder ? `<div class="for-label">for ${escapeHtml(playerNames[dir])}</div>` : ''}
           </div>
           <div class="game-middle">
             <button class="nav-btn" id="prev-btn" ${isFirst ? 'disabled' : ''}>‹</button>
-            <div class="question-text">${card.text}</div>
+            <div class="card-content">
+              <div class="question-text${isReminder ? ' reminder' : ''}">${escapeHtml(card.text)}</div>
+              ${timerBlock}
+            </div>
             <button class="nav-btn" id="next-btn">›</button>
           </div>
           <div class="game-bottom">
             ${canReroll ? '<button class="reroll-btn" id="reroll-btn">↺ Re-roll</button>' : '<div style="height:35px"></div>'}
             <div class="progress">${currentIndex + 1} / ${total}</div>
+            ${digRow}
           </div>
         </div>
       `
     }
+
+    // ── Render: Level Complete ────────────────────────────────
+    // Only called after Level 1 and Level 2; never called after Level 3
     function renderLevelComplete() {
       const level = QUESTIONS[`level${currentLevel}`]
       const nextLevel = currentLevel + 1
       const nextLevelData = QUESTIONS[`level${nextLevel}`]
+      if (!nextLevelData) return '' // guard: should never reach here for Level 3
       return `
         <div class="end-screen">
           <div class="end-label">Level ${currentLevel} Complete</div>
-          <div class="end-title">${level.name}</div>
+          <div class="end-title">${escapeHtml(level.name)}</div>
           <div class="end-divider"></div>
           <div class="end-message">Ready to go deeper,<br>${escapeHtml(playerNames.p1)} &amp; ${escapeHtml(playerNames.p2)}?</div>
           <button class="btn-end" id="next-level-btn">
-            Level ${nextLevel}: ${nextLevelData.name} →
+            Level ${nextLevel}: ${escapeHtml(nextLevelData.name)} →
           </button>
         </div>
       `
     }
+
+    // ── Render: Final Card ────────────────────────────────────
+    function renderFinalCard() {
+      return `
+        <div class="end-screen">
+          <div class="end-label">Final Card</div>
+          <div class="end-divider"></div>
+          <div class="final-instruction">${escapeHtml(QUESTIONS.finalCard)}</div>
+          <div class="end-divider"></div>
+          <button class="btn-end" id="continue-final-btn">Continue</button>
+        </div>
+      `
+    }
+
+    // ── Render: Game Complete ─────────────────────────────────
     function renderGameComplete() {
       return `
         <div class="end-screen">
@@ -339,6 +469,8 @@
         </div>
       `
     }
+
+    // ── Bind: Resume ──────────────────────────────────────────
     function bindResume() {
       document.getElementById('continue-btn').addEventListener('click', () => {
         if (loadState()) {
@@ -354,15 +486,16 @@
         render()
       })
     }
+
+    // ── Bind: Setup ───────────────────────────────────────────
     function bindSetup() {
-      // ▲/▼ buttons
       let qty = Math.min(5, computedMax)
       const qtyEl = document.getElementById('qty')
       document.getElementById('qty-up').addEventListener('click', () => {
         if (qty < computedMax) { qty++; qtyEl.value = qty }
       })
       document.getElementById('qty-down').addEventListener('click', () => {
-        if (qty > 3) { qty--; qtyEl.value = qty }
+        if (qty > 5) { qty--; qtyEl.value = qty }
       })
 
       document.getElementById('start-btn').addEventListener('click', () => {
@@ -375,33 +508,44 @@
         questionsPerLevel = qty
         p1GoesFirst = true
         currentLevel = 1
+        digDeeper = { p1: true, p2: true }
         localStorage.removeItem('wnrs_save')
+        screen = 'instructions'
+        render()
+      })
+    }
+
+    // ── Bind: Instructions ────────────────────────────────────
+    function bindInstructions() {
+      document.getElementById('lets-play-btn').addEventListener('click', () => {
         startLevel(1)
       })
     }
+
+    // ── Navigation ────────────────────────────────────────────
     function navigate(dir) {
       if (dir === 'prev') {
         if (currentIndex > 0) {
+          stopTimer()
           currentIndex--
           saveState()
           render()
         }
       } else {
         if (currentIndex < currentDeck.length - 1) {
+          stopTimer()
           currentIndex++
           saveState()
           render()
         } else {
-          // Last card — transition
+          stopTimer()
           if (currentLevel < 3) {
-            // Flip p1GoesFirst based on parity
             if (currentDeck.length % 2 !== 0) p1GoesFirst = !p1GoesFirst
             screen = 'levelcomplete'
             saveState()
             render()
           } else {
-            // Level 3 complete → game complete
-            screen = 'gamecomplete'
+            screen = 'finalcard'
             localStorage.removeItem('wnrs_save')
             render()
           }
@@ -418,11 +562,56 @@
       render()
     }
 
+    // ── Timer ─────────────────────────────────────────────────
+    function startTimer(duration) {
+      timerRemaining = duration
+      timerRunning   = true
+      timerDone      = false
+      timerInterval = setInterval(() => {
+        timerRemaining--
+        if (timerRemaining <= 0) {
+          timerRemaining = 0
+          timerRunning   = false
+          timerDone      = true
+          clearInterval(timerInterval)
+          timerInterval  = null
+          const timerBlock = document.querySelector('.timer-block')
+          if (timerBlock) timerBlock.innerHTML = '<div class="timer-done">Time\'s up!</div>'
+        } else {
+          const display = document.querySelector('.timer-display')
+          if (display) display.textContent = formatTime(timerRemaining)
+        }
+      }, 1000)
+    }
+
+    function stopTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null }
+      timerRunning   = false
+      timerDone      = false
+      timerRemaining = 0
+    }
+
+    // ── Dig Deeper ────────────────────────────────────────────
+    function useDigDeeper(player) {
+      digDeeper[player] = false
+      saveState()
+      const banner = document.getElementById('dig-banner')
+      const name = playerNames[player]
+      banner.textContent = `${escapeHtml(name)} thinks you're holding back — go deeper.`
+      banner.classList.add('visible')
+      // Update button states immediately without full re-render
+      const btn = document.getElementById(`dig-${player}-btn`)
+      if (btn) btn.disabled = true
+      setTimeout(() => banner.classList.remove('visible'), 2500)
+      banner.onclick = () => banner.classList.remove('visible')
+    }
+
+    // ── Save / Load ───────────────────────────────────────────
     function saveState() {
       const state = {
         playerNames, questionsPerLevel,
         currentLevel, currentDeck, currentIndex,
-        remainingPool, p1GoesFirst, screen
+        remainingPool, p1GoesFirst, digDeeper, screen
       }
       localStorage.setItem('wnrs_save', JSON.stringify(state))
     }
@@ -439,6 +628,7 @@
         currentIndex      = s.currentIndex
         remainingPool     = s.remainingPool
         p1GoesFirst       = s.p1GoesFirst
+        digDeeper         = s.digDeeper || { p1: true, p2: true }
         screen            = s.screen
         return true
       } catch {
@@ -447,33 +637,63 @@
       }
     }
 
+    // ── Bind: Game ────────────────────────────────────────────
     function bindGame() {
       document.getElementById('prev-btn').addEventListener('click', () => navigate('prev'))
       document.getElementById('next-btn').addEventListener('click', () => navigate('next'))
+
       const rerollBtn = document.getElementById('reroll-btn')
       if (rerollBtn) rerollBtn.addEventListener('click', reroll)
+
+      const timerStartBtn = document.getElementById('timer-start-btn')
+      if (timerStartBtn) {
+        timerStartBtn.addEventListener('click', () => {
+          const card = currentDeck[currentIndex]
+          timerStartBtn.remove()
+          startTimer(card.duration)
+        })
+      }
+
+      const digP1 = document.getElementById('dig-p1-btn')
+      if (digP1) digP1.addEventListener('click', () => useDigDeeper('p1'))
+
+      const digP2 = document.getElementById('dig-p2-btn')
+      if (digP2) digP2.addEventListener('click', () => useDigDeeper('p2'))
     }
+
+    // ── Bind: Level Complete ──────────────────────────────────
     function bindLevelComplete() {
       document.getElementById('next-level-btn').addEventListener('click', () => {
         startLevel(currentLevel + 1)
       })
     }
-    function bindGameComplete() {
-      document.getElementById('play-again-btn').addEventListener('click', () => {
-        localStorage.removeItem('wnrs_save')
-        playerNames = { p1: '', p2: '' }
-        questionsPerLevel = Math.min(5, computedMax)
-        currentLevel = 1
-        currentDeck = []
-        currentIndex = 0
-        remainingPool = []
-        p1GoesFirst = true
-        screen = 'setup'
+
+    // ── Bind: Final Card ──────────────────────────────────────
+    function bindFinalCard() {
+      document.getElementById('continue-final-btn').addEventListener('click', () => {
+        screen = 'gamecomplete'
         render()
       })
     }
 
-    // Fisher-Yates shuffle (mutates array, returns it)
+    // ── Bind: Game Complete ───────────────────────────────────
+    function bindGameComplete() {
+      document.getElementById('play-again-btn').addEventListener('click', () => {
+        localStorage.removeItem('wnrs_save')
+        playerNames       = { p1: '', p2: '' }
+        questionsPerLevel = Math.min(5, computedMax)
+        currentLevel      = 1
+        currentDeck       = []
+        currentIndex      = 0
+        remainingPool     = []
+        p1GoesFirst       = true
+        digDeeper         = { p1: true, p2: true }
+        screen            = 'setup'
+        render()
+      })
+    }
+
+    // ── Fisher-Yates Shuffle ──────────────────────────────────
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
@@ -482,37 +702,48 @@
       return arr
     }
 
+    // ── Deck Building ─────────────────────────────────────────
     function buildDeck(levelKey) {
       const level = QUESTIONS[levelKey]
+
+      // Wild card count: 1 per 5 questions, minimum 1
+      const wildcardCount = Math.max(1, Math.floor(questionsPerLevel / 5))
+
+      // Shuffle and split regular questions
       const shuffledQuestions = shuffle([...level.questions])
-      const hasDealer = level.dealBreakers.length > 0
+      const selected = shuffledQuestions.slice(0, questionsPerLevel)
+      remainingPool = shuffledQuestions.slice(questionsPerLevel)
 
-      let selected, db
+      // Select wild cards (without replacement)
+      const shuffledWild = shuffle([...level.wildcards])
+      const selectedWild = shuffledWild.slice(0, Math.min(wildcardCount, shuffledWild.length))
 
-      if (hasDealer) {
-        // N-1 regular questions + 1 deal breaker = N total
-        selected = shuffledQuestions.slice(0, questionsPerLevel - 1)
-        remainingPool = shuffledQuestions.slice(questionsPerLevel - 1)
-        const randomDb = level.dealBreakers[Math.floor(Math.random() * level.dealBreakers.length)]
-        db = { text: randomDb, type: 'dealbreaker' }
-      } else {
-        // No deal breakers available — use N regular questions
-        selected = shuffledQuestions.slice(0, questionsPerLevel)
-        remainingPool = shuffledQuestions.slice(questionsPerLevel)
-        db = null
+      // Map to card objects
+      const questionCards = selected.map(text => ({ text, type: 'question' }))
+      const wildcardCards = selectedWild.map(wc => ({
+        text: wc.text,
+        type: 'wildcard',
+        timed: wc.timed,
+        ...(wc.timed ? { duration: wc.duration } : {})
+      }))
+
+      // Shuffle questions + wildcards together
+      const mixed = shuffle([...questionCards, ...wildcardCards])
+
+      // Prepend reminder card if this level has one
+      if (level.reminder) {
+        return [{ text: level.reminder, type: 'reminder' }, ...mixed]
       }
-
-      const deck = selected.map(text => ({ text, type: 'question' }))
-      if (db) deck.push(db)
-      shuffle(deck) // randomise deal breaker position
-      return deck
+      return mixed
     }
 
+    // ── Start Level ───────────────────────────────────────────
     function startLevel(level) {
       currentLevel = level
       currentIndex = 0
-      const key = `level${level}`
-      currentDeck = buildDeck(key)
+      digDeeper    = { p1: true, p2: true }
+      stopTimer()
+      currentDeck = buildDeck(`level${level}`)
       screen = 'game'
       saveState()
       render()
