@@ -26,16 +26,16 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-      overflow: hidden;
+      overflow-x: hidden; /* vertical scroll allowed so landscape doesn't clip */
     }
 
     #app {
-      height: 100dvh;
-      height: 100vh; /* fallback */
+      min-height: 100dvh;
+      min-height: 100vh; /* fallback */
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start; /* flex-start + margin:auto on .screen = centers when fits, scrolls when not */
       padding:
         max(24px, env(safe-area-inset-top))
         max(16px, env(safe-area-inset-right))
@@ -44,7 +44,18 @@
     }
 
     /* ---- Shared ---- */
-    .screen { width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .screen {
+      width: 100%; max-width: 420px;
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      margin-block: auto; /* centers vertically when there's space; collapses to 0 when overflowing so scroll works */
+    }
+
+    /* Tighter layout in landscape on small screens */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .screen { gap: 14px; }
+      .instructions-body { gap: 8px; }
+      .instruction-rule { font-size: 13px; }
+    }
 
     /* ---- Setup Screen ---- */
     .setup-title-sub { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
