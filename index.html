@@ -122,13 +122,14 @@
         max(clamp(10px, 2.5dvh, 20px), env(safe-area-inset-bottom));
     }
     .game-top { text-align: center; padding: 0 16px; }
-    /* dvh clamps: shrink in landscape (short viewport), full size in portrait */
-    .level-label { font-size: clamp(10px, 1.6dvh, 12px); letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
-    .for-label { font-size: clamp(12px, 2dvh, 15px); font-weight: 600; color: var(--text); margin-top: clamp(2px, 0.8dvh, 6px); }
+    /* dvh clamps scale with viewport HEIGHT — shrink in landscape, full size in portrait.
+       All text minimums ≥ 12px per design requirement. */
+    .level-label { font-size: clamp(12px, 1.8dvh, 13px); letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+    .for-label { font-size: clamp(13px, 2.2dvh, 16px); font-weight: 600; color: var(--text); margin-top: clamp(3px, 0.8dvh, 6px); }
     .wildcard-badge {
       display: inline-block; border: 1.5px solid var(--accent); color: var(--accent);
-      font-size: clamp(9px, 1.4dvh, 10px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-      padding: 3px 10px; border-radius: 20px; margin-top: clamp(2px, 0.8dvh, 6px);
+      font-size: clamp(12px, 1.6dvh, 13px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      padding: clamp(2px, 0.6dvh, 4px) 10px; border-radius: 20px; margin-top: clamp(3px, 0.8dvh, 6px);
     }
     .game-middle {
       flex: 1; display: flex; align-items: center; gap: 0;
@@ -143,32 +144,34 @@
     .nav-btn:not(:disabled):active { color: var(--accent); }
     .card-content { flex: 1; display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.5dvh, 20px); }
     .question-text {
-      font-size: clamp(0.95rem, 3.5dvh, 1.5rem); /* dvh = scales with height, not width */
-      line-height: 1.6; color: var(--text); text-align: center; max-width: 28ch;
+      font-size: clamp(1.1rem, 4dvh, 1.75rem); /* dvh scales with height, not width */
+      line-height: 1.65; color: var(--text); text-align: center;
+      max-width: min(36ch, 88%); /* wider than before — uses more horizontal space */
     }
-    .question-text.reminder { font-style: italic; color: var(--text); font-size: clamp(0.85rem, 3dvh, 1.3rem); }
+    .question-text.reminder { font-style: italic; color: var(--text); font-size: clamp(1rem, 3.5dvh, 1.4rem); }
     .timer-block { display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 1.5dvh, 10px); }
     .timer-display { font-size: clamp(22px, 5dvh, 36px); font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 2px; }
-    .timer-done { font-size: clamp(11px, 1.8dvh, 13px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+    .timer-done { font-size: clamp(12px, 2dvh, 13px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
     .timer-start-btn {
       background: var(--accent); color: var(--white); border: none; border-radius: 10px;
-      padding: clamp(7px, 1.5dvh, 10px) 28px; font-size: clamp(11px, 1.8dvh, 13px); font-weight: 700; letter-spacing: 1px;
+      padding: clamp(8px, 1.6dvh, 10px) 28px; font-size: clamp(12px, 2dvh, 13px); font-weight: 700; letter-spacing: 1px;
       text-transform: uppercase; cursor: pointer;
     }
     .timer-start-btn:active { background: var(--accent-dark); }
     .game-bottom { display: flex; flex-direction: column; align-items: center; gap: clamp(5px, 1.2dvh, 10px); padding: 0 16px; }
     .reroll-btn {
       background: none; border: 1.5px solid var(--border); border-radius: 8px;
-      color: var(--accent); font-size: clamp(11px, 1.8dvh, 13px); font-weight: 600; letter-spacing: 1px;
-      padding: clamp(5px, 1.2dvh, 8px) 20px; cursor: pointer;
+      color: var(--accent); font-size: clamp(12px, 1.8dvh, 13px); font-weight: 600; letter-spacing: 1px;
+      padding: clamp(6px, 1.2dvh, 8px) 20px; cursor: pointer;
     }
     .reroll-btn:active { background: var(--border); }
-    .progress { font-size: clamp(10px, 1.5dvh, 11px); color: var(--text-muted); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+    .progress { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
     .dig-deeper-row { display: flex; gap: 8px; width: 100%; }
     .dig-btn {
       flex: 1; background: none; border: 1.5px solid var(--border); border-radius: 8px;
-      color: var(--text); font-size: clamp(9px, 1.5dvh, 11px); font-weight: 600; letter-spacing: 0.5px;
-      padding: clamp(5px, 1.2dvh, 8px) 6px; cursor: pointer; line-height: 1.3; text-align: center;
+      color: var(--text); font-size: clamp(12px, 1.6dvh, 13px); font-weight: 600; letter-spacing: 0.5px;
+      padding: clamp(10px, 1.6dvh, 14px) 8px; cursor: pointer; line-height: 1;
+      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .dig-btn:not(:disabled):active { background: var(--border); }
     .dig-btn:disabled { opacity: 0.35; cursor: default; border-color: var(--border); color: var(--text-muted); }
@@ -429,10 +432,10 @@
       const digRow = isReminder ? '' : `
         <div class="dig-deeper-row">
           <button class="dig-btn" id="dig-p1-btn" ${p1Used ? 'disabled' : ''}>
-            ${escapeHtml(playerNames.p1)}<br>Dig Deeper
+            ${escapeHtml(playerNames.p1)} Dig Deeper
           </button>
           <button class="dig-btn" id="dig-p2-btn" ${p2Used ? 'disabled' : ''}>
-            ${escapeHtml(playerNames.p2)}<br>Dig Deeper
+            ${escapeHtml(playerNames.p2)} Dig Deeper
           </button>
         </div>
       `
